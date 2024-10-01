@@ -8,7 +8,7 @@
 
 extern bool htp_Filter_Cover;
 extern bool htp_Wifi_Pin_Status;
-extern bool htp_Wifi_Connected;
+// extern bool htp_Wifi_Connected;
 extern bool htp_LED_State;
 extern bool htp_Wifi_K_Status;
 extern bool htp_Hold;

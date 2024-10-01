@@ -62,8 +62,11 @@ extern char g_chipId_String[17];
 // Other Variables
 extern bool espNowMode;
 extern bool toggleLED;
+extern bool htp_Wifi_Connected;
 extern unsigned long long toggleStartTime;
 extern unsigned long long  buttonPressTime; 
+extern unsigned long long  hotspotStartTime; 
+extern unsigned long long  modeChangeInterval; 
 extern const int BUTTON_PRESS_MIN_TIMER;
 extern const int BUTTON_PRESS_MAX_TIMER;
 

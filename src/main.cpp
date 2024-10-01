@@ -39,12 +39,15 @@ String ssid;
 
  bool espNowMode = false;
  bool toggleLED = false;
+ bool htp_Wifi_Connected = false;
  unsigned long long toggleStartTime = 0;
  unsigned long long  buttonPressTime = 0;  
+ unsigned long long  hotspotStartTime = 0;  
+ unsigned long long  modeChangeInterval = 60000;  
 const int BUTTON_PRESS_MIN_TIMER = 3000; 
 const int BUTTON_PRESS_MAX_TIMER = 4000; 
 
-clz_device_type_id g_device_Type = CLZ_APF_AC;
+clz_device_type_id g_device_Type = CLZ_APF_DC;
 String g_subType = "";
 
 
@@ -174,16 +177,27 @@ void loop() {
   else {
     hotspotFilterHandler(filterStatus);
 
-    toggleLED = (toggleLED == LOW) ? HIGH : LOW;
-    delay(500);
-    digitalWrite(LED_PIN, toggleLED);
+    if (millis() - toggleStartTime <= 60000) {
+      toggleLED = (toggleLED == LOW) ? HIGH : LOW;
+      digitalWrite(LED_PIN, toggleLED);
+      delay(500);
+    }
+    else{
+      if(htp_Wifi_Connected){
+        digitalWrite(LED_PIN, HIGH);
+        toggleStartTime = 0;
+      }
+      else{
+        digitalWrite(LED_PIN, LOW);
+      }
+    }
   }
   
   if(g_subType == "DC"){
     if (digitalRead(WIFI_CONFIG_PIN) == LOW) {
       if (buttonPressTime == 0) buttonPressTime = millis();
 
-      if (millis() - buttonPressTime >= BUTTON_PRESS_MAX_TIMER && millis() - buttonPressTime <= BUTTON_PRESS_MIN_TIMER) {
+      if (millis() - buttonPressTime <= BUTTON_PRESS_MAX_TIMER && millis() - buttonPressTime >= BUTTON_PRESS_MIN_TIMER) {
         if (espNowMode) {
           EEPROM.write(0, 0);  // Save Hotspot mode in EEPROM
           EEPROM.commit();
@@ -197,4 +211,11 @@ void loop() {
       buttonPressTime = 0;  // Reset button press time if the button is released
     }
   }
+
+  if (millis() - hotspotStartTime >= modeChangeInterval) {
+      EEPROM.write(0, 255);
+      EEPROM.commit();
+      ESP.restart();  
+    }
+
 }
