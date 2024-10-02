@@ -112,7 +112,7 @@ void setup() {
 
   switch (g_device_Type) {
     case CLZ_APF_DC:
-    Serial.println("DC Motor");
+      Serial.println("DC Motor");
       WiFi.setTxPower(WIFI_POWER_11dBm);
       g_subType = "DC";
       pinMode(g_fg_Pin, INPUT);
@@ -191,6 +191,12 @@ void loop() {
         digitalWrite(LED_PIN, LOW);
       }
     }
+
+    if (millis() - hotspotStartTime >= modeChangeInterval) {
+        EEPROM.write(0, 255);
+        EEPROM.commit();
+        ESP.restart();  
+    }
   }
   
   if(g_subType == "DC"){
@@ -204,6 +210,8 @@ void loop() {
           ESP.restart();
         } 
         else {
+          EEPROM.write(0, 0);  // Save Hotspot mode in EEPROM
+          EEPROM.commit();
           ESP.restart();
         }
       }
@@ -211,11 +219,4 @@ void loop() {
       buttonPressTime = 0;  // Reset button press time if the button is released
     }
   }
-
-  if (millis() - hotspotStartTime >= modeChangeInterval) {
-      EEPROM.write(0, 255);
-      EEPROM.commit();
-      ESP.restart();  
-    }
-
 }

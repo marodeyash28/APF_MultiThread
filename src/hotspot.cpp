@@ -369,6 +369,8 @@ void handleRoot() {
 
 
 void startHotspot() {
+  EEPROM.write(0, 255);  // Save ESPNOW mode in EEPROM
+  EEPROM.commit();
   ssid = "EVK-APF_" + String(g_chipId_String);           
   delay(1000); 
   WiFi.softAP(ssid);
@@ -407,27 +409,27 @@ void commandTask(void *pvParameters) {
         if (receivedCommand=="Test Mode (OFF)"){
           //Serial.println("Hotspot released received");
         //   g_device_State= HOTSPOT;
-        EEPROM.write(0, 255);
-        EEPROM.commit();
-        ESP.restart();
+            EEPROM.write(0, 255);
+            EEPROM.commit();
+            ESP.restart();
           htp_Hold = false;
         }
         else if(receivedCommand=="Test Mode (ON)"){
           //Serial.println("Hostpot hold received");
         //   g_device_State= HOTSPOT_HOLD;
-        modeChangeInterval += 600000;
-          htp_Hold = true;
+            modeChangeInterval += 600000;
+            htp_Hold = true;
         }
         else if(receivedCommand=="UPFIRM"){
           //Serial.println("Update Firmware received");
           //htp_UpdFirm = 1;
-        modeChangeInterval += 600000;
+            modeChangeInterval += 600000;
         }
         else if(receivedCommand == "IO22-WiFi(ON)"){
           //Serial.println("IO22-WiFi(ON)....");
           //htp_UpdFirm = 1;
           htp_Wifi_K_Status= true;
-        modeChangeInterval += 600000;
+            modeChangeInterval += 600000;
         //   flicker_wifiLed();
         }
         if(htp_Filter_Cover==true){
