@@ -23,6 +23,7 @@
 #include <string.h>
 #include <mbedtls/md5.h>
 
+
 // Pin Definitions
 extern const int LED_PIN;
 extern const int WIFI_CONFIG_PIN;
@@ -61,6 +62,7 @@ extern char g_chipId_String[17];
 
 // Other Variables
 extern bool espNowMode;
+extern bool initializeHotspot; 
 extern bool toggleLED;
 extern bool htp_Wifi_Connected;
 extern unsigned long long toggleStartTime;

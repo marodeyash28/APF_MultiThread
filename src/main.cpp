@@ -2,9 +2,6 @@
 #include "espnow.h"
 #include "hotspot.h"
 
-#define EEPROM_SIZE 1
-
-// Pin Definitions
 const int LED_PIN = 21;
 const int WIFI_CONFIG_PIN = 22;
 const int FILTER_COVER_PIN = 23;
@@ -37,17 +34,18 @@ String g_IP = "";
 char g_chipId_String[17];
 String ssid;
 
- bool espNowMode = false;
+ bool espNowMode = true;
+ bool initializeHotspot = false; 
  bool toggleLED = false;
  bool htp_Wifi_Connected = false;
  unsigned long long toggleStartTime = 0;
  unsigned long long  buttonPressTime = 0;  
  unsigned long long  hotspotStartTime = 0;  
- unsigned long long  modeChangeInterval = 60000;  
-const int BUTTON_PRESS_MIN_TIMER = 3000; 
-const int BUTTON_PRESS_MAX_TIMER = 4000; 
+ unsigned long long  modeChangeInterval = 120000;  
+const int BUTTON_PRESS_MIN_TIMER = 2000; 
+const int BUTTON_PRESS_MAX_TIMER = 3000; 
 
-clz_device_type_id g_device_Type = CLZ_APF_DC;
+clz_device_type_id g_device_Type = CLZ_APF_AC;
 String g_subType = "";
 
 
@@ -92,8 +90,6 @@ void print_firmware_md5() {
 
 void setup() {
   Serial.begin(115200);
-  EEPROM.begin(EEPROM_SIZE);
-
   delay(1000);
   Serial.println("Welcome to EVK-Purifier");
   Serial.println("Firmware Version : V1.00");
@@ -143,28 +139,7 @@ void setup() {
       break;
   }
 
-
-uint8_t readEEPROM = EEPROM.read(0); 
-Serial.print("readEEPROM: ");
-Serial.println(readEEPROM);
-
-int CLZ_DEVICE_MODE = 0; // (0 for hotspot, 1 for espnow)
-if(readEEPROM == 255){
-  CLZ_DEVICE_MODE = 1;
-}
-else{
-  CLZ_DEVICE_MODE = 0; 
-}
-
-  if (CLZ_DEVICE_MODE == 1) {
-    espNowMode = true;
-    Serial.println("espnow mode");
-    startESPNOW();
-  } else {
-    espNowMode = false;
-    Serial.println("hotspot mode");
-    startHotspot();
-  }
+  startESPNOW();
 }
 
 void loop() {
@@ -175,26 +150,35 @@ void loop() {
     espnowFilterHandler(filterStatus);
   } 
   else {
-    hotspotFilterHandler(filterStatus);
-
-    if (millis() - toggleStartTime <= 60000) {
+    if (millis() - toggleStartTime <= 60000 && !htp_Wifi_Connected) {
       toggleLED = (toggleLED == LOW) ? HIGH : LOW;
       digitalWrite(LED_PIN, toggleLED);
       delay(500);
+    } 
+    else {
+      if (htp_Wifi_Connected) {
+        digitalWrite(LED_PIN, HIGH); 
+      } 
+      else {
+        digitalWrite(LED_PIN, LOW); 
+      }
     }
-    else{
-      if(htp_Wifi_Connected){
-        digitalWrite(LED_PIN, HIGH);
-        toggleStartTime = 0;
+    
+    if(!initializeHotspot){
+      WiFi.mode(WIFI_OFF);
+      if (esp_now_deinit() == ESP_OK) {
+          Serial.println("ESPNOW deinitialized.");
+      } else {
+          Serial.println("Error deinitializing ESPNOW.");
       }
-      else{
-        digitalWrite(LED_PIN, LOW);
-      }
+      startHotspot();
+      hotspotStartTime = millis();
+      initializeHotspot = true;
     }
 
+    hotspotFilterHandler(filterStatus);
+
     if (millis() - hotspotStartTime >= modeChangeInterval) {
-        EEPROM.write(0, 255);
-        EEPROM.commit();
         ESP.restart();  
     }
   }
@@ -204,16 +188,11 @@ void loop() {
       if (buttonPressTime == 0) buttonPressTime = millis();
 
       if (millis() - buttonPressTime <= BUTTON_PRESS_MAX_TIMER && millis() - buttonPressTime >= BUTTON_PRESS_MIN_TIMER) {
-        if (espNowMode) {
-          EEPROM.write(0, 0);  // Save Hotspot mode in EEPROM
-          EEPROM.commit();
-          ESP.restart();
-        } 
-        else {
-          EEPROM.write(0, 0);  // Save Hotspot mode in EEPROM
-          EEPROM.commit();
-          ESP.restart();
-        }
+        Serial.println("Switching to HOTSPOT mode.");
+        espNowMode = false;
+        initializeHotspot = false;
+        htp_Wifi_Connected = false;
+        toggleStartTime = millis();
       }
     } else {
       buttonPressTime = 0;  // Reset button press time if the button is released

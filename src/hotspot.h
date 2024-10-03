@@ -8,15 +8,12 @@
 
 extern bool htp_Filter_Cover;
 extern bool htp_Wifi_Pin_Status;
-// extern bool htp_Wifi_Connected;
 extern bool htp_LED_State;
 extern bool htp_Wifi_K_Status;
+extern bool htp_scanWIFI;
 extern bool htp_Hold;
 extern int htp_UpdFirm;
-extern int htp_Scanned_Devices;
-extern unsigned long long htp_Filter_TimerCurrent;
-extern bool htp_Flickering_Done;
-
+extern int htp_numNetworks;
 extern QueueHandle_t commandQueue;
 
 

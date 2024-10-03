@@ -230,8 +230,10 @@ void espnow_task(void *pvParameter) {
                 for (const JsonVariant &name : namesArray) {
                   if (strcmp(name.as<const char *>(), g_chipId_String) == 0) {
                     //  g_uflag = 1;
-                     delay(10000);
-                     ESP.restart();
+                     espNowMode = false;
+                    initializeHotspot = false;
+                    htp_Wifi_Connected = false;
+                    toggleStartTime = millis();
                   }
                 }
               }

@@ -2,15 +2,12 @@
 
 bool htp_Filter_Cover = false;
 bool htp_Wifi_Pin_Status = false;
-// bool htp_Wifi_Connected = false;
 bool htp_LED_State = false; // Ask Nitish Sir its use
 bool htp_Wifi_K_Status = true;
-bool htp_Hold = false;  // Functionality overriden
+bool htp_Hold = false;
+bool htp_scanWIFI = false;
 int htp_UpdFirm = 0; // Always used as 0
-int htp_Scanned_Devices = 0;
-unsigned long long htp_Filter_TimerCurrent; // Functionality overriden
-bool htp_Flickering_Done = false;  // Functionality overriden
-
+int htp_numNetworks;//yash need to change for variable in hotspot.h
 QueueHandle_t commandQueue;
 
 
@@ -325,10 +322,10 @@ void handleRoot() {
         "  <select id=\"ssid\">" : "";  // Add an empty string if htp_Wifi_K_Status is false
 
   if (htp_Wifi_K_Status) { // Only scan networks if the WiFi config is visible
-      int numNetworks = WiFi.scanNetworks();  // Scan for networks
 
-      for (int i = 0; i < numNetworks; i++) {
+      for (int i = 0; i < htp_numNetworks; i++) {
           wifiConfigHtml += "<option value=\"" + WiFi.SSID(i) + "\">" + WiFi.SSID(i) + "</option>";
+          Serial.println(WiFi.SSID(i));
       }
 
     wifiConfigHtml += 
@@ -336,7 +333,7 @@ void handleRoot() {
         "  <input id=\"password\" type=\"password\" placeholder=\"Password\" class=\"input-field\">"
         "  <div class=\"row\">"
         "    <button class=\"button\" onclick=\"saveWiFiConfig()\">Save</button>"
-        "    <button class=\"button\" onclick=\"toggleWiFiConfig()\">Back</button>"
+        "    <button class=\"button\" onclick=\"sendCommand('scan_wifi')\" >Scan Networks</button>"
         "  </div>"
         "</div>";
   }
@@ -369,8 +366,7 @@ void handleRoot() {
 
 
 void startHotspot() {
-  EEPROM.write(0, 255);  // Save ESPNOW mode in EEPROM
-  EEPROM.commit();
+  htp_scanWIFI = true;
   ssid = "EVK-APF_" + String(g_chipId_String);           
   delay(1000); 
   WiFi.softAP(ssid);
@@ -409,8 +405,6 @@ void commandTask(void *pvParameters) {
         if (receivedCommand=="Test Mode (OFF)"){
           //Serial.println("Hotspot released received");
         //   g_device_State= HOTSPOT;
-            EEPROM.write(0, 255);
-            EEPROM.commit();
             ESP.restart();
           htp_Hold = false;
         }
@@ -424,6 +418,9 @@ void commandTask(void *pvParameters) {
           //Serial.println("Update Firmware received");
           //htp_UpdFirm = 1;
             modeChangeInterval += 600000;
+        }
+        else if(receivedCommand=="scan_wifi"){
+          htp_numNetworks = WiFi.scanNetworks();
         }
         else if(receivedCommand == "IO22-WiFi(ON)"){
           //Serial.println("IO22-WiFi(ON)....");
@@ -446,6 +443,7 @@ void commandTask(void *pvParameters) {
 }
 
 void clientTask(void *pvParameters) {
+
   while (true) {
     // htp_Filter_TimerCurrent = millis();
     if (htp_UpdFirm == 0){
@@ -466,21 +464,18 @@ void clientTask(void *pvParameters) {
       if(g_device_Type == CLZ_PLG_AC){
         htp_Filter_Cover = true;
       }
-    int numDevices = WiFi.softAPgetStationNum();
-    if (numDevices > htp_Scanned_Devices){
-      //Serial.println("WIFI paring done");
-      htp_Scanned_Devices = numDevices;
-    }
-    if (htp_Scanned_Devices > numDevices){
-      //Serial.println(" WIFI paring terminated");
-      // digitalWrite(WIFI_K, LOW);
-       htp_Scanned_Devices = numDevices;
-    } 
+
   } 
   //Serial.println(" Server client handling...");
   server.handleClient();
-    delay(1500);   
-}
+    delay(1500);  
+    if(htp_scanWIFI){
+        Serial.println("scan wifi");
+        htp_numNetworks = WiFi.scanNetworks();
+        htp_scanWIFI = false;
+    } 
+    }
+    
 }
 
 
