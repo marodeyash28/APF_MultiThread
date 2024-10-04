@@ -2,7 +2,6 @@
 #define GLOBAL_H
 
 #include <Arduino.h>
-#include <EEPROM.h>
 #include <esp_now.h>
 #include <ArduinoJson.h>
 #include <map>
@@ -52,23 +51,27 @@ extern const int g_frequency;
 extern const int g_pwm_Channel;
 extern const int g_resolution;
 
-// Other global variables
+// String
 extern String g_md5_str;
 extern String g_IP;
-
-// Global Declarations
 extern String ssid;
 extern char g_chipId_String[17];
 
-// Other Variables
+// Flag
 extern bool espNowMode;
 extern bool initializeHotspot; 
 extern bool toggleLED;
 extern bool htp_Wifi_Connected;
+
+// Timer
 extern unsigned long long toggleStartTime;
-extern unsigned long long  buttonPressTime; 
-extern unsigned long long  hotspotStartTime; 
-extern unsigned long long  modeChangeInterval; 
+extern unsigned long long buttonPressTime; 
+extern unsigned long long hotspotStartTime; 
+extern unsigned long long printVersionPrev;
+
+// Constant 
+extern long long modeChangeInterval;
+extern const long long printVersionInterval; 
 extern const int BUTTON_PRESS_MIN_TIMER;
 extern const int BUTTON_PRESS_MAX_TIMER;
 

@@ -12,9 +12,9 @@
 extern unsigned long esp_Status_TimerCurrent;
 extern unsigned long esp_Status_TimerStart;
 extern unsigned long esp_Status_Timer;
-
 extern bool esp_Device_Paired;
 extern bool esp_Filter_Cover;
+extern bool esp_Update_Firmware;
 extern String esp_Prev_Fan_Speed;
 extern String esp_Current_Fan_Speed;
 

@@ -99,7 +99,6 @@ void handleSaveWiFi() {
     String response = "<html><body><h1>Wrong Configuration Plz Try Again</h1></body></html>";
     server.send(200, "text/html", response);
     g_IP= "";
-
    }
   }
 }
@@ -325,7 +324,7 @@ void handleRoot() {
 
       for (int i = 0; i < htp_numNetworks; i++) {
           wifiConfigHtml += "<option value=\"" + WiFi.SSID(i) + "\">" + WiFi.SSID(i) + "</option>";
-          Serial.println(WiFi.SSID(i));
+          //Serial.println(WiFi.SSID(i));
       }
 
     wifiConfigHtml += 
@@ -370,8 +369,8 @@ void startHotspot() {
   ssid = "EVK-APF_" + String(g_chipId_String);           
   delay(1000); 
   WiFi.softAP(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.softAPIP());     
+  //Serial.print("IP address: ");
+  //Serial.println(WiFi.softAPIP());     
   
   server.on("/", handleRoot);    
   server.on("/command", handleCommand);
@@ -401,7 +400,7 @@ void commandTask(void *pvParameters) {
   while (true) {
     if (htp_UpdFirm == 0){
       if (xQueueReceive(commandQueue, &receivedCommand, portMAX_DELAY) == pdPASS) {
-        Serial.println(receivedCommand);
+        //Serial.println(receivedCommand);
         if (receivedCommand=="Test Mode (OFF)"){
           //Serial.println("Hotspot released received");
         //   g_device_State= HOTSPOT;
@@ -411,13 +410,13 @@ void commandTask(void *pvParameters) {
         else if(receivedCommand=="Test Mode (ON)"){
           //Serial.println("Hostpot hold received");
         //   g_device_State= HOTSPOT_HOLD;
-            modeChangeInterval += 600000;
+            modeChangeInterval = 750000;
             htp_Hold = true;
         }
         else if(receivedCommand=="UPFIRM"){
           //Serial.println("Update Firmware received");
           //htp_UpdFirm = 1;
-            modeChangeInterval += 600000;
+            modeChangeInterval = 750000;
         }
         else if(receivedCommand=="scan_wifi"){
           htp_numNetworks = WiFi.scanNetworks();
@@ -426,7 +425,7 @@ void commandTask(void *pvParameters) {
           //Serial.println("IO22-WiFi(ON)....");
           //htp_UpdFirm = 1;
           htp_Wifi_K_Status= true;
-            modeChangeInterval += 600000;
+            modeChangeInterval = 750000;
         //   flicker_wifiLed();
         }
         if(htp_Filter_Cover==true){
@@ -470,7 +469,7 @@ void clientTask(void *pvParameters) {
   server.handleClient();
     delay(1500);  
     if(htp_scanWIFI){
-        Serial.println("scan wifi");
+        //Serial.println("scan wifi");
         htp_numNetworks = WiFi.scanNetworks();
         htp_scanWIFI = false;
     } 

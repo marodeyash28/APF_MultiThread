@@ -29,19 +29,27 @@ const int g_frequency = 5000;
 const int g_pwm_Channel = 0;
 const int g_resolution = 8;
 
+//String
 String g_md5_str = "";
 String g_IP = "";
 char g_chipId_String[17];
 String ssid;
 
- bool espNowMode = true;
- bool initializeHotspot = false; 
- bool toggleLED = false;
- bool htp_Wifi_Connected = false;
- unsigned long long toggleStartTime = 0;
- unsigned long long  buttonPressTime = 0;  
- unsigned long long  hotspotStartTime = 0;  
- unsigned long long  modeChangeInterval = 120000;  
+//Flag
+bool espNowMode = true;
+bool initializeHotspot = false; 
+bool toggleLED = false;
+bool htp_Wifi_Connected = false;
+
+// Timer
+unsigned long long toggleStartTime = 0;
+unsigned long long  buttonPressTime = 0;  
+unsigned long long  hotspotStartTime = 0; 
+unsigned long long printVersionPrev = 0;
+
+// Constants
+long long modeChangeInterval = 150000;
+const long long printVersionInterval = 30000;  
 const int BUTTON_PRESS_MIN_TIMER = 2000; 
 const int BUTTON_PRESS_MAX_TIMER = 3000; 
 
@@ -108,7 +116,7 @@ void setup() {
 
   switch (g_device_Type) {
     case CLZ_APF_DC:
-      Serial.println("DC Motor");
+      //Serial.println("DC Motor");
       WiFi.setTxPower(WIFI_POWER_11dBm);
       g_subType = "DC";
       pinMode(g_fg_Pin, INPUT);
@@ -144,7 +152,7 @@ void setup() {
 
 void loop() {
   
-  int filterStatus = (g_subType == "DC") ? digitalRead(FILTER_COVER_PIN) : true;
+  int filterStatus = (g_subType == "AC") ? digitalRead(FILTER_COVER_PIN) : true;
 
   if (espNowMode) {
     espnowFilterHandler(filterStatus);
@@ -167,9 +175,9 @@ void loop() {
     if(!initializeHotspot){
       WiFi.mode(WIFI_OFF);
       if (esp_now_deinit() == ESP_OK) {
-          Serial.println("ESPNOW deinitialized.");
+          //Serial.println("ESPNOW deinitialized.");
       } else {
-          Serial.println("Error deinitializing ESPNOW.");
+          //Serial.println("Error deinitializing ESPNOW.");
       }
       startHotspot();
       hotspotStartTime = millis();
@@ -183,19 +191,32 @@ void loop() {
     }
   }
   
-  if(g_subType == "DC"){
-    if (digitalRead(WIFI_CONFIG_PIN) == LOW) {
+  if(g_subType == "AC"){
+    if (digitalRead(WIFI_CONFIG_PIN) == LOW || esp_Update_Firmware) {
       if (buttonPressTime == 0) buttonPressTime = millis();
 
-      if (millis() - buttonPressTime <= BUTTON_PRESS_MAX_TIMER && millis() - buttonPressTime >= BUTTON_PRESS_MIN_TIMER) {
-        Serial.println("Switching to HOTSPOT mode.");
+      if ((millis() - buttonPressTime <= BUTTON_PRESS_MAX_TIMER && millis() - buttonPressTime >= BUTTON_PRESS_MIN_TIMER) || esp_Update_Firmware) {
+        Serial.println("Turning ON HOTSPOT mode.");
         espNowMode = false;
         initializeHotspot = false;
         htp_Wifi_Connected = false;
+        esp_Update_Firmware = false;
         toggleStartTime = millis();
+        g_IP= "";
+        control_h_speed("Off", 1);
       }
     } else {
       buttonPressTime = 0;  // Reset button press time if the button is released
     }
+  }
+
+  unsigned long printVersionCurr = millis();
+
+  if (printVersionCurr - printVersionPrev >= printVersionInterval) {
+    printVersionCurr = printVersionCurr;
+
+    Serial.println("Welcome to EVK-Purifier");
+    Serial.println("Firmware Version : V1.00");
+    print_firmware_md5();
   }
 }

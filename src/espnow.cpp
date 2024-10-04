@@ -6,6 +6,7 @@ unsigned long esp_Status_Timer = 60000;
 
 bool esp_Device_Paired = false;
 bool esp_Filter_Cover = false;
+bool esp_Update_Firmware = false;
 String esp_Prev_Fan_Speed = "";
 String esp_Current_Fan_Speed = "Off";
 
@@ -38,10 +39,10 @@ void startESPNOW() {
   if (esp_now_init() == ESP_OK) {
     esp_now_register_recv_cb(espnow_recv_cb);
     esp_now_register_send_cb(espnow_send_cb);
-    Serial.println("ESPNOW Init Succeed...");
+    //Serialrintln("ESPNOW Init Succeed...");
   } 
   else {
-    Serial.println("ESPNOW Init Failed...");
+    //Serialrintln("ESPNOW Init Failed...");
     delay(3000);
     ESP.restart();
   }
@@ -64,9 +65,9 @@ void espnowFilterHandler(int filterStatus) {
     esp_Filter_Cover = true;
     // Serial.println("ESPNOW: Sensor is HIGH");
     if(esp_Prev_Fan_Speed != ""){
-        Serial.println("Condition Satiesfied and going to previous fan speed");
+        //Serialrintln("Condition Satiesfied and going to previous fan speed");
         esp_Current_Fan_Speed = esp_Prev_Fan_Speed;
-        // control_speed(esp_Prev_Fan_Speed, 1); // TBD
+        control_speed(esp_Prev_Fan_Speed, 1);
         esp_Prev_Fan_Speed = "";
       }
   } else {
@@ -75,7 +76,7 @@ void espnowFilterHandler(int filterStatus) {
     if(esp_Prev_Fan_Speed == ""){
         esp_Prev_Fan_Speed = esp_Current_Fan_Speed;        
         //Serial.print("Prev Fanspeed Set to Current Fan Speed =  ");
-        Serial.println(esp_Prev_Fan_Speed);
+        //Serialrintln(esp_Prev_Fan_Speed);
         control_speed("Off", 1);
         delay(3000);
     }
@@ -162,13 +163,13 @@ void espnow_task(void *pvParameter) {
   clz_espnow_event_t _task_evt;
 
   while (xQueueReceive(esp_Espnow_Queue, &_task_evt, portMAX_DELAY) == pdTRUE) {
+    esp_Status_TimerStart = esp_Status_TimerCurrent;
     esp_Status_TimerCurrent = millis();
     if (esp_Status_TimerCurrent - esp_Status_TimerStart >= esp_Status_Timer) {
       send_apf_status(_task_evt.mac_addr, MULTICAST);
-      Serial.println(
-          "60 Second counter success. Sending out APF status to all Peers "
-          "using Multicast.");
-      esp_Status_TimerStart = esp_Status_TimerCurrent;
+    //   Serial.println(
+    //       "60 Second counter success. Sending out APF status to all Peers "
+    //       "using Multicast.");
     }
 
     switch (_task_evt.id) {
@@ -216,24 +217,21 @@ void espnow_task(void *pvParameter) {
                   if (strcmp(name.as<const char *>(), g_chipId_String) == 0) {
                     removePeer(_task_evt.mac_addr);
                     if (esp_Peer_Sensors.size() == 0) {
-                      esp_Device_Paired = false;
+                       esp_Device_Paired = false;
                        digitalWrite(LED_PIN, LOW);
+                       control_speed("Off", 1);
                     }
                   }
                 }
               }
 
               if(type == "update_firmware"){
-                //Serial.println("Update firmware call recieved...");
                 JsonArray namesArray = doc["devices"];
 
                 for (const JsonVariant &name : namesArray) {
                   if (strcmp(name.as<const char *>(), g_chipId_String) == 0) {
-                    //  g_uflag = 1;
-                     espNowMode = false;
-                    initializeHotspot = false;
-                    htp_Wifi_Connected = false;
-                    toggleStartTime = millis();
+                    // Serial.println("Inside Update firmware call...");
+                    esp_Update_Firmware = true;
                   }
                 }
               }
@@ -276,8 +274,8 @@ void espnow_task(void *pvParameter) {
               if(esp_Filter_Cover == false ){
                 if(esp_Prev_Fan_Speed == ""){
                   esp_Prev_Fan_Speed = esp_Current_Fan_Speed;
-                  Serial.print("Prev Fanspeed: ");
-                  Serial.println(esp_Prev_Fan_Speed);
+                  //Serial.print("Prev Fanspeed: ");
+                  //Serial.println(esp_Prev_Fan_Speed);
                 }
                esp_Current_Fan_Speed = "Off";
               }
@@ -299,7 +297,7 @@ void espnow_task(void *pvParameter) {
                 if (doc.containsKey("type")) {
                   String type = doc["type"];
                   if (type == "scan") {
-                    Serial.printf("espnow_task-else if-ESPNOW_RECV_CB from Unpaired Peer: ""%s - %s\n",macStr, buffer);
+                    //Serial.printf("espnow_task-else if-ESPNOW_RECV_CB from Unpaired Peer: ""%s - %s\n",macStr, buffer);
                     esp_now_peer_info_t _peerInfo = {};
                     memcpy(_peerInfo.peer_addr, _task_evt.mac_addr, 6);
 
@@ -316,11 +314,11 @@ void espnow_task(void *pvParameter) {
                   }
                 }
                 if (doc.containsKey("Provisioned_devices")) {
-                  Serial.printf(
-                      "Inside espnow_task. else if condition -- -- Different "
-                      "Peer exists. Unpaired Meter -- Scan or Provision. "
-                      "Received message from: %s - %s\n",
-                      macStr, buffer);
+                  //Serial.printf(
+                    //   "Inside espnow_task. else if condition -- -- Different "
+                    //   "Peer exists. Unpaired Meter -- Scan or Provision. "
+                    //   "Received message from: %s - %s\n",
+                    //   macStr, buffer);
                   JsonArray namesArray = doc["Provisioned_devices"];
 
                   for (const JsonVariant &name : namesArray) {
@@ -345,10 +343,10 @@ void espnow_task(void *pvParameter) {
               String type = doc["type"];
 
               if (type == "scan") {
-                Serial.printf(
-                    "espnow_task-else- Unpaired Meter call--ESPNOW_RECV_CB "
-                    "from: %s - %s\n",
-                    macStr, buffer);
+                // Serial.printf(
+                //     "espnow_task-else- Unpaired Meter call--ESPNOW_RECV_CB "
+                //     "from: %s - %s\n",
+                //     macStr, buffer);
                 esp_now_peer_info_t _peerInfo = {};
                 memcpy(_peerInfo.peer_addr, _task_evt.mac_addr, 6);
 
@@ -366,11 +364,11 @@ void espnow_task(void *pvParameter) {
               }
             }
             if (doc.containsKey("Provisioned_devices")) {
-              Serial.printf(
-                  "Inside espnow_task. else condition -- -- No Peers. Unpaired "
-                  "Meter -- Scan or Provision. Received message from: %s - "
-                  "%s\n",
-                  macStr, buffer);
+            //   Serial.printf(
+            //       "Inside espnow_task. else condition -- -- No Peers. Unpaired "
+            //       "Meter -- Scan or Provision. Received message from: %s - "
+            //       "%s\n",
+            //       macStr, buffer);
               JsonArray namesArray = doc["Provisioned_devices"];
               for (const JsonVariant &name : namesArray) {
                 if (strcmp(name.as<const char *>(), g_chipId_String) == 0) {
@@ -457,7 +455,7 @@ void broadcast_on_espnow(const uint8_t *messageBuffer, size_t messageLength,
     esp_err_t result = esp_now_send(iMacAddress, messageBuffer, messageLength);
 
     if (result == ESP_OK) {
-        Serial.println("Data sent successfully in broadcast_on_espnow.");
+        // Serial.println("Data sent successfully in broadcast_on_espnow.");
         
         if (iBroadcast_Mode == TEMP_UNICAST) {
             clz_espnow_event_t _temp_uni;
@@ -470,8 +468,8 @@ void broadcast_on_espnow(const uint8_t *messageBuffer, size_t messageLength,
             }
         }
     } else {
-       Serial.print("Error sending data: ");
-        Serial.println(esp_err_to_name(result)); 
+       //Serial.print("Error sending data: ");
+        //Serial.println(esp_err_to_name(result)); 
     }
     
     delay(2000);
@@ -660,8 +658,8 @@ void send_apf_status(const uint8_t *mac_addr, clz_espnow_broadcast_mode iMode) {
       ESP.restart();
     }
     else{
-      Serial.print("APF Status Sent: ");
-      Serial.println(_purifier_Status);
+      //Serial.print("APF Status Sent: ");
+      //Serial.println(_purifier_Status);
     }
     free(_apf_evt.data);
   } else {
@@ -676,14 +674,14 @@ void formatMacAddress(const uint8_t *mac_addr, char *buffer, int maxLength) {
 
 
 void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status) {
-   Serial.print("Last Packet Send Status: ");
+   //Serial.print("Last Packet Send Status: ");
 
   if (status == ESP_NOW_SEND_SUCCESS) {
-    Serial.println("ESP_NOW_SEND_SUCCEED -- Send Succeed");
+    //Serial.println("ESP_NOW_SEND_SUCCEED -- Send Succeed");
   } else if (status == ESP_NOW_SEND_FAIL) {
-     Serial.println("ESP_NOW_SEND_FAIL -- Send Failed");
+     //Serial.println("ESP_NOW_SEND_FAIL -- Send Failed");
   } else {
-     Serial.println("Unknown Error");
+     //Serial.println("Unknown Error");
   }
 }
 
