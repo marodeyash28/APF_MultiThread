@@ -53,7 +53,7 @@ const long long printVersionInterval = 30000;
 const int BUTTON_PRESS_MIN_TIMER = 2000; 
 const int BUTTON_PRESS_MAX_TIMER = 3000; 
 
-clz_device_type_id g_device_Type = CLZ_APF_AC;
+clz_device_type_id g_device_Type = CLZ_PLG_AC;
 String g_subType = "";
 
 
@@ -152,7 +152,7 @@ void setup() {
 
 void loop() {
   
-  int filterStatus = (g_subType == "AC") ? digitalRead(FILTER_COVER_PIN) : true;
+  int filterStatus = (g_subType == "DC") ? digitalRead(FILTER_COVER_PIN) : true;
 
   if (espNowMode) {
     espnowFilterHandler(filterStatus);
@@ -191,7 +191,7 @@ void loop() {
     }
   }
   
-  if(g_subType == "AC"){
+  if(g_subType == "DC"){
     if (digitalRead(WIFI_CONFIG_PIN) == LOW || esp_Update_Firmware) {
       if (buttonPressTime == 0) buttonPressTime = millis();
 
@@ -200,6 +200,7 @@ void loop() {
         espNowMode = false;
         initializeHotspot = false;
         htp_Wifi_Connected = false;
+        htp_Wifi_Pin_Status = false;
         esp_Update_Firmware = false;
         toggleStartTime = millis();
         g_IP= "";
@@ -213,7 +214,7 @@ void loop() {
   unsigned long printVersionCurr = millis();
 
   if (printVersionCurr - printVersionPrev >= printVersionInterval) {
-    printVersionCurr = printVersionCurr;
+    printVersionPrev = printVersionCurr;
 
     Serial.println("Welcome to EVK-Purifier");
     Serial.println("Firmware Version : V1.00");

@@ -18,6 +18,7 @@ extern QueueHandle_t commandQueue;
 
 
 void startHotspot();
+void turnOnHotspotMode();
 void hotspotFilterHandler(int filterStatus);
 void handleRoot();
 void handleCommand();

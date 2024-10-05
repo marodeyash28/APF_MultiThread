@@ -91,14 +91,14 @@ void handleSaveWiFi() {
     server.send(200, "text/html", response);
    }
    else{
-    htp_Wifi_Pin_Status = false;
-    htp_Wifi_Connected = false;
     //Serial.println("Unable to connect wifi network, Going back to hotspot");
+    htp_Wifi_Connected = false;
+    htp_Wifi_Pin_Status = false;
     delay(1000);
     digitalWrite(LED_PIN, LOW);
+    g_IP = "";
     String response = "<html><body><h1>Wrong Configuration Plz Try Again</h1></body></html>";
     server.send(200, "text/html", response);
-    g_IP= "";
    }
   }
 }
@@ -324,7 +324,6 @@ void handleRoot() {
 
       for (int i = 0; i < htp_numNetworks; i++) {
           wifiConfigHtml += "<option value=\"" + WiFi.SSID(i) + "\">" + WiFi.SSID(i) + "</option>";
-          //Serial.println(WiFi.SSID(i));
       }
 
     wifiConfigHtml += 
@@ -339,7 +338,7 @@ void handleRoot() {
 
   String bodyHtml = "<body>" + title +
                     "<div class=\"container\">" + buttonHtml +
-                    "<div class=\"row\" id=\"mainButtons\">" // Wrap main buttons in a div
+                    "<div class=\"row\" id=\"mainButtons\">" 
                     "  <button id=\"toggleButton\" class=\"button\" onclick=\"toggleButton()\" style=\"background-color:" + String(htp_Hold ? "#1877F2" : "#145db2") + ";\">Test Mode " + String(htp_Hold ? "(ON)" : "(OFF)") + "</button>"
                     "  <button class=\"button\" onclick=\"openModal()\">Upload (Firm)</button>"
                     "</div>"
@@ -384,6 +383,8 @@ void startHotspot() {
   xTaskCreate(clientTask, "ClientTask", 4096, NULL, 1, NULL);
 }
 
+
+
 void hotspotFilterHandler(int filterStatus) {
   // Handle filter status in hotspot mode
   if (filterStatus == HIGH) {
@@ -425,7 +426,7 @@ void commandTask(void *pvParameters) {
           //Serial.println("IO22-WiFi(ON)....");
           //htp_UpdFirm = 1;
           htp_Wifi_K_Status= true;
-            modeChangeInterval = 750000;
+          modeChangeInterval = 750000;
         //   flicker_wifiLed();
         }
         if(htp_Filter_Cover==true){
