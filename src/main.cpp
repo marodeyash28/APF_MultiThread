@@ -40,11 +40,12 @@ bool espNowMode = true;
 bool initializeHotspot = false; 
 bool toggleLED = false;
 bool htp_Wifi_Connected = false;
+bool g_Update_Firmware = false;
 
 // Timer
 unsigned long long toggleStartTime = 0;
-unsigned long long  buttonPressTime = 0;  
-unsigned long long  hotspotStartTime = 0; 
+unsigned long long buttonPressTime = 0;  
+unsigned long long hotspotStartTime = 0; 
 unsigned long long printVersionPrev = 0;
 
 // Constants
@@ -53,7 +54,7 @@ const long long printVersionInterval = 30000;
 const int BUTTON_PRESS_MIN_TIMER = 2000; 
 const int BUTTON_PRESS_MAX_TIMER = 3000; 
 
-clz_device_type_id g_device_Type = CLZ_PLG_AC;
+clz_device_type_id g_device_Type = CLZ_APF_DC;
 String g_subType = "";
 
 
@@ -152,19 +153,33 @@ void setup() {
 
 void loop() {
   
-  int filterStatus = (g_subType == "DC") ? digitalRead(FILTER_COVER_PIN) : true;
+  // int filterStatus = (g_subType == "DC") ? digitalRead(FILTER_COVER_PIN) : true;
+  int filterStatus;
+  if(g_subType == "DC"){
+    int dc_filterStatus = digitalRead(FILTER_COVER_PIN);
+    if(dc_filterStatus == 0){
+      filterStatus = 1;
+    }
+    else{
+      filterStatus = 0;
+    }
+  }
+  else{
+      filterStatus = 1;
+  }
+
 
   if (espNowMode) {
     espnowFilterHandler(filterStatus);
   } 
   else {
-    if (millis() - toggleStartTime <= 60000 && !htp_Wifi_Connected) {
+    if (millis() - toggleStartTime <= 60000 && !htp_Wifi_Connected && g_subType == "DC") {
       toggleLED = (toggleLED == LOW) ? HIGH : LOW;
       digitalWrite(LED_PIN, toggleLED);
       delay(500);
     } 
     else {
-      if (htp_Wifi_Connected) {
+      if (htp_Wifi_Connected && g_subType == "DC") {
         digitalWrite(LED_PIN, HIGH); 
       } 
       else {
@@ -192,23 +207,19 @@ void loop() {
   }
   
   if(g_subType == "DC"){
-    if (digitalRead(WIFI_CONFIG_PIN) == LOW || esp_Update_Firmware) {
+    if (digitalRead(WIFI_CONFIG_PIN) == LOW || g_Update_Firmware) {
       if (buttonPressTime == 0) buttonPressTime = millis();
 
-      if ((millis() - buttonPressTime <= BUTTON_PRESS_MAX_TIMER && millis() - buttonPressTime >= BUTTON_PRESS_MIN_TIMER) || esp_Update_Firmware) {
-        Serial.println("Turning ON HOTSPOT mode.");
-        espNowMode = false;
-        initializeHotspot = false;
-        htp_Wifi_Connected = false;
-        htp_Wifi_Pin_Status = false;
-        esp_Update_Firmware = false;
-        toggleStartTime = millis();
-        g_IP= "";
-        control_h_speed("Off", 1);
+      if ((millis() - buttonPressTime <= BUTTON_PRESS_MAX_TIMER && millis() - buttonPressTime >= BUTTON_PRESS_MIN_TIMER)) {
+        turnOnHotspotMode();
       }
     } else {
       buttonPressTime = 0;  // Reset button press time if the button is released
     }
+  }
+
+  if(g_Update_Firmware){
+    turnOnHotspotMode();
   }
 
   unsigned long printVersionCurr = millis();

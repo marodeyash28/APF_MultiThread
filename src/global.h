@@ -62,6 +62,7 @@ extern bool espNowMode;
 extern bool initializeHotspot; 
 extern bool toggleLED;
 extern bool htp_Wifi_Connected;
+extern bool g_Update_Firmware;
 
 // Timer
 extern unsigned long long toggleStartTime;

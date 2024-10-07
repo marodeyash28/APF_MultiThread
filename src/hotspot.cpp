@@ -92,8 +92,8 @@ void handleSaveWiFi() {
    }
    else{
     //Serial.println("Unable to connect wifi network, Going back to hotspot");
-    htp_Wifi_Connected = false;
-    htp_Wifi_Pin_Status = false;
+    htp_Wifi_Connected = (g_subType == "DC") ? false : true;
+    htp_Wifi_Pin_Status = (g_subType == "DC") ? false : true;
     delay(1000);
     digitalWrite(LED_PIN, LOW);
     g_IP = "";
@@ -383,7 +383,17 @@ void startHotspot() {
   xTaskCreate(clientTask, "ClientTask", 4096, NULL, 1, NULL);
 }
 
-
+void turnOnHotspotMode() {
+    Serial.println("Turning ON HOTSPOT mode.");
+    espNowMode = false;
+    initializeHotspot = false;
+    htp_Wifi_Connected = (g_subType == "DC") ? false : true;
+    htp_Wifi_Pin_Status = (g_subType == "DC") ? false : true;
+    g_Update_Firmware = false;
+    toggleStartTime = millis();
+    g_IP = "";
+    control_h_speed("Off", 1);
+}
 
 void hotspotFilterHandler(int filterStatus) {
   // Handle filter status in hotspot mode

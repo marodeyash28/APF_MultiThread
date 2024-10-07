@@ -6,7 +6,6 @@ unsigned long esp_Status_Timer = 60000;
 
 bool esp_Device_Paired = false;
 bool esp_Filter_Cover = false;
-bool esp_Update_Firmware = false;
 String esp_Prev_Fan_Speed = "";
 String esp_Current_Fan_Speed = "Off";
 
@@ -65,7 +64,7 @@ void espnowFilterHandler(int filterStatus) {
     esp_Filter_Cover = true;
     // Serial.println("ESPNOW: Sensor is HIGH");
     if(esp_Prev_Fan_Speed != ""){
-        //Serialrintln("Condition Satiesfied and going to previous fan speed");
+        //Serial.println("Condition Satiesfied and going to previous fan speed");
         esp_Current_Fan_Speed = esp_Prev_Fan_Speed;
         control_speed(esp_Prev_Fan_Speed, 1);
         esp_Prev_Fan_Speed = "";
@@ -231,7 +230,7 @@ void espnow_task(void *pvParameter) {
                 for (const JsonVariant &name : namesArray) {
                   if (strcmp(name.as<const char *>(), g_chipId_String) == 0) {
                     // Serial.println("Inside Update firmware call...");
-                    esp_Update_Firmware = true;
+                    g_Update_Firmware = true;
                   }
                 }
               }
