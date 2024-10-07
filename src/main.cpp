@@ -153,21 +153,7 @@ void setup() {
 
 void loop() {
   
-  // int filterStatus = (g_subType == "DC") ? digitalRead(FILTER_COVER_PIN) : true;
-  int filterStatus;
-  if(g_subType == "DC"){
-    int dc_filterStatus = digitalRead(FILTER_COVER_PIN);
-    if(dc_filterStatus == 0){
-      filterStatus = 1;
-    }
-    else{
-      filterStatus = 0;
-    }
-  }
-  else{
-      filterStatus = 1;
-  }
-
+  int filterStatus = (g_subType == "DC") ? digitalRead(FILTER_COVER_PIN) : true;
 
   if (espNowMode) {
     espnowFilterHandler(filterStatus);
