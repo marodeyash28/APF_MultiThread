@@ -22,7 +22,6 @@
 #include <string.h>
 #include <mbedtls/md5.h>
 
-
 // Pin Definitions
 extern const int LED_PIN;
 extern const int WIFI_CONFIG_PIN;

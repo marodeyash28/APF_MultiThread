@@ -38,10 +38,10 @@ void startESPNOW() {
   if (esp_now_init() == ESP_OK) {
     esp_now_register_recv_cb(espnow_recv_cb);
     esp_now_register_send_cb(espnow_send_cb);
-    //Serialrintln("ESPNOW Init Succeed...");
+    // Serial.println("ESPNOW Init Succeed...");
   } 
   else {
-    //Serialrintln("ESPNOW Init Failed...");
+    // Serial.println("ESPNOW Init Failed...");
     delay(3000);
     ESP.restart();
   }
@@ -166,9 +166,7 @@ void espnow_task(void *pvParameter) {
     esp_Status_TimerCurrent = millis();
     if (esp_Status_TimerCurrent - esp_Status_TimerStart >= esp_Status_Timer) {
       send_apf_status(_task_evt.mac_addr, MULTICAST);
-    //   Serial.println(
-    //       "60 Second counter success. Sending out APF status to all Peers "
-    //       "using Multicast.");
+    //   Serial.println("60 Second counter success. Sending out APF status to all Peers using Multicast.");
     }
 
     switch (_task_evt.id) {
@@ -185,8 +183,8 @@ void espnow_task(void *pvParameter) {
         DeserializationError error = deserializeJson(doc, buffer);
 
         if (error) {
-          //Serial.print("deserializeJson() failed: ");
-          //Serial.println(error.c_str());
+        //   Serial.print("deserializeJson() failed: ");
+        //   Serial.println(error.c_str());
         } else {
           String _deviceID = doc["DeviceID"];
           String _fanSpeed = doc["Fan_Speed"];
@@ -196,9 +194,7 @@ void espnow_task(void *pvParameter) {
           formatMacAddress(_task_evt.mac_addr, temp, 18);
 
           if (esp_Device_Paired && !esp_Peer_Sensors.empty() && isPeerPresent(String(temp))) {
-            // //Serial.printf(
-            //     "espnow_task-if- Paired Meter--ESPNOW_RECV_CB: %s - %s\n",
-            //     macStr, buffer);
+            // Serial.printf("espnow_task-if- Paired Meter--ESPNOW_RECV_CB: %s - %s\n", macStr, buffer);
 
             if (doc.containsKey("type")) {
               //Serial.println("In Doc Type");
@@ -206,6 +202,7 @@ void espnow_task(void *pvParameter) {
 
               if(type == "all_device_reset"){
                 digitalWrite(LED_PIN, LOW);
+                control_speed("Off", 1);
                 ESP.restart();
               }
 
@@ -296,7 +293,7 @@ void espnow_task(void *pvParameter) {
                 if (doc.containsKey("type")) {
                   String type = doc["type"];
                   if (type == "scan") {
-                    //Serial.printf("espnow_task-else if-ESPNOW_RECV_CB from Unpaired Peer: ""%s - %s\n",macStr, buffer);
+                    // Serial.printf("espnow_task-else if-ESPNOW_RECV_CB from Unpaired Peer: ""%s - %s\n",macStr, buffer);
                     esp_now_peer_info_t _peerInfo = {};
                     memcpy(_peerInfo.peer_addr, _task_evt.mac_addr, 6);
 
@@ -313,11 +310,7 @@ void espnow_task(void *pvParameter) {
                   }
                 }
                 if (doc.containsKey("Provisioned_devices")) {
-                  //Serial.printf(
-                    //   "Inside espnow_task. else if condition -- -- Different "
-                    //   "Peer exists. Unpaired Meter -- Scan or Provision. "
-                    //   "Received message from: %s - %s\n",
-                    //   macStr, buffer);
+                //   Serial.printf("espnow_task. else if condition -- Different Peer exists. Unpaired Meter -- Scan or Provision message from: %s - %s\n",macStr, buffer);
                   JsonArray namesArray = doc["Provisioned_devices"];
 
                   for (const JsonVariant &name : namesArray) {
@@ -342,10 +335,7 @@ void espnow_task(void *pvParameter) {
               String type = doc["type"];
 
               if (type == "scan") {
-                // Serial.printf(
-                //     "espnow_task-else- Unpaired Meter call--ESPNOW_RECV_CB "
-                //     "from: %s - %s\n",
-                //     macStr, buffer);
+                // Serial.printf("espnow_task-else- Unpaired Meter call--ESPNOW_RECV_CB from: %s - %s\n", macStr, buffer);
                 esp_now_peer_info_t _peerInfo = {};
                 memcpy(_peerInfo.peer_addr, _task_evt.mac_addr, 6);
 
@@ -363,11 +353,7 @@ void espnow_task(void *pvParameter) {
               }
             }
             if (doc.containsKey("Provisioned_devices")) {
-            //   Serial.printf(
-            //       "Inside espnow_task. else condition -- -- No Peers. Unpaired "
-            //       "Meter -- Scan or Provision. Received message from: %s - "
-            //       "%s\n",
-            //       macStr, buffer);
+            //   Serial.printf("Inside espnow_task. else condition -- -- No Peers. Unpaired Meter -- Scan or Provision. Received message from: %s - %s\n", macStr, buffer);
               JsonArray namesArray = doc["Provisioned_devices"];
               for (const JsonVariant &name : namesArray) {
                 if (strcmp(name.as<const char *>(), g_chipId_String) == 0) {
@@ -467,8 +453,8 @@ void broadcast_on_espnow(const uint8_t *messageBuffer, size_t messageLength,
             }
         }
     } else {
-       //Serial.print("Error sending data: ");
-        //Serial.println(esp_err_to_name(result)); 
+    //    Serial.print("Error sending data: ");
+        // Serial.println(esp_err_to_name(result)); 
     }
     
     delay(2000);
@@ -657,8 +643,8 @@ void send_apf_status(const uint8_t *mac_addr, clz_espnow_broadcast_mode iMode) {
       ESP.restart();
     }
     else{
-      //Serial.print("APF Status Sent: ");
-      //Serial.println(_purifier_Status);
+    //   Serial.print("APF Status Sent: ");
+    //   Serial.println(_purifier_Status);
     }
     free(_apf_evt.data);
   } else {
@@ -676,9 +662,9 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status) {
    //Serial.print("Last Packet Send Status: ");
 
   if (status == ESP_NOW_SEND_SUCCESS) {
-    //Serial.println("ESP_NOW_SEND_SUCCEED -- Send Succeed");
+    // Serial.println("ESP_NOW_SEND_SUCCEED -- Send Succeed");
   } else if (status == ESP_NOW_SEND_FAIL) {
-     //Serial.println("ESP_NOW_SEND_FAIL -- Send Failed");
+    //  Serial.println("ESP_NOW_SEND_FAIL -- Send Failed");
   } else {
      //Serial.println("Unknown Error");
   }
