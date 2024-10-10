@@ -206,6 +206,7 @@ void espnow_task(void *pvParameter) {
 
               if(type == "all_device_reset"){
                 digitalWrite(LED_PIN, LOW);
+                control_speed("Off", 1);
                 ESP.restart();
               }
 
