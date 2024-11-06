@@ -12,7 +12,9 @@ String esp_Current_Fan_Speed = "Off";
 int esp_Current_Ov_Flag = 0;
 int esp_Current_State = 0;
 int esp_Prev_Ov = 1;
+int esp_Prvn = 0;
 
+float esp_version = 0.0;
 std::map<std::string, std::map<std::string, std::string>> esp_Peer_Sensors;
 
 StaticJsonDocument<256> esp_Purifer_Status;
@@ -196,7 +198,7 @@ void espnow_task(void *pvParameter) {
           formatMacAddress(_task_evt.mac_addr, temp, 18);
 
           if (esp_Device_Paired && !esp_Peer_Sensors.empty() && isPeerPresent(String(temp))) {
-            // //Serial.printf(
+            // Serial.printf(
             //     "espnow_task-if- Paired Meter--ESPNOW_RECV_CB: %s - %s\n",
             //     macStr, buffer);
 
@@ -227,7 +229,6 @@ void espnow_task(void *pvParameter) {
 
               if(type == "update_firmware"){
                 JsonArray namesArray = doc["devices"];
-
                 for (const JsonVariant &name : namesArray) {
                   if (strcmp(name.as<const char *>(), g_chipId_String) == 0) {
                     // Serial.println("Inside Update firmware call...");
@@ -376,7 +377,6 @@ void espnow_task(void *pvParameter) {
                   esp_Device_Paired = true;
                   // g_Unlock = 0;
                   addPeer(_task_evt.mac_addr);
-                  //AJ 09.21
                   digitalWrite(LED_PIN, HIGH);
                 }
               }
@@ -577,6 +577,8 @@ void send_apf_status(const uint8_t *mac_addr, clz_espnow_broadcast_mode iMode) {
   esp_Purifer_Status["auto"] = esp_Current_Ov_Flag;
   esp_Purifer_Status["concept"] = g_subType;
   esp_Purifer_Status["filter"] = esp_Filter_Cover;
+  esp_Purifer_Status["prvn"] = esp_Peer_Sensors.size();
+  esp_Purifer_Status["VER"] = String(esp_version, 1); 
 
   String _purifier_Status;
   serializeJson(esp_Purifer_Status, _purifier_Status);

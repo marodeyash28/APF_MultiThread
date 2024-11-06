@@ -20,7 +20,9 @@ extern String esp_Current_Fan_Speed;
 extern int esp_Current_Ov_Flag;
 extern int esp_Current_State;
 extern int esp_Prev_Ov;
+extern int esp_Prvn;
 
+extern float esp_version;
 // Declare global map for peer sensors
 extern std::map<std::string, std::map<std::string, std::string>> esp_Peer_Sensors;
 

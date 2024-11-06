@@ -54,7 +54,7 @@ const long long printVersionInterval = 30000;
 const int BUTTON_PRESS_MIN_TIMER = 2000; 
 const int BUTTON_PRESS_MAX_TIMER = 3000; 
 
-clz_device_type_id g_device_Type = CLZ_APF_DC;
+clz_device_type_id g_device_Type = CLZ_APF_AC;
 String g_subType = "";
 
 
